@@ -1,0 +1,2424 @@
+#pragma once
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include<string>
+#include<fstream>
+#include<ctime>
+using namespace std;
+time_t now = time(0);
+using namespace std;
+class personType
+{
+protected:
+	string id, name, cnic, gender, bloodgroup, age;
+public:
+	personType();
+	virtual void SetPersonData(string iid, string iname, string icnic, string igender, string ibloodgroup, string age) = 0;
+};
+
+personType::personType()
+{
+	id = "Null";
+	name = "Null";
+	cnic = "Null";
+	gender = "Null";
+	bloodgroup = "Null";
+}
+void personType::SetPersonData(string iid, string iname, string icnic, string igender, string ibloodgroup, string age)
+{
+	id = iid;
+	name = iname;
+	cnic = icnic;
+	gender = igender;
+	bloodgroup = ibloodgroup;
+}
+
+
+
+
+
+class Doctor :public personType
+{
+	int DoctorRoomNo;
+	string DoctorRole;
+	static int DoctorsInRoom_1;//These are the total reserved beds in a room
+	static int DoctorsInRoom_2;//We Will Assign this to the Doctor bed number + 1
+	static int DoctorsInRoom_3;
+	Doctor* next = NULL;
+	Doctor* prev = NULL;
+public:
+	Doctor();
+	void SetPersonData(string iid, string iname, string icnic, string igender, string ibloodgroup, string age);
+	void insertDoctor(Doctor** doctorData, string iid, string iname, string iage, string icnic, string igender, string ibloodgroup, int iroomno, string irole, char option);
+	void InputSingleDoctor(Doctor** doctorData, char option);
+	bool DoctorIdUnique(Doctor* doctorData, string tempid);
+	void SearchDoctor(Doctor** doctorData, char option, char choice);
+	void ExportTotalDoctors(Doctor** doctorData);
+	void ImportTotalDoctors(Doctor** doctorData);
+	void ImportDoctorsData(Doctor** doctorData, char  option);
+	void ExportDoctorsData(Doctor* doctorData, int data, char option);
+	void DoctorAdmit(Doctor* doctorData, int data, char  option);
+	void DoctorDischarged(Doctor** doctorData, string DoctorID, int data, char  option);
+	void DisplayDoctorData(char option);
+	void DisplayAllDoctors(Doctor* doctorData, char option);
+	~Doctor();
+};
+
+
+Doctor::Doctor()
+{
+	DoctorRole = "NULL";
+	DoctorRoomNo = 0;
+	next = NULL;
+	prev = NULL;
+}
+void Doctor::SetPersonData(string iid, string iname, string icnic, string igender, string ibloodgroup, string age)
+{
+	id = iid;
+	name = iname;
+	cnic = icnic;
+	gender = igender;
+	bloodgroup = ibloodgroup;
+}
+void Doctor::insertDoctor(Doctor** doctorData, string iid, string iname, string iage, string icnic, string igender, string ibloodgroup, int iroomno, string irole, char option)
+{
+	Doctor* temp = new Doctor;
+	temp->id = iid;
+	temp->name = iname;
+	temp->age = iage;
+	temp->cnic = icnic;
+	temp->gender = igender;
+	temp->DoctorRoomNo = iroomno;
+	temp->bloodgroup = ibloodgroup;
+	temp->DoctorRole = irole;
+	Doctor* traverse = *doctorData;
+	if (traverse == NULL)
+	{
+		temp->next = temp->prev = NULL;
+		*doctorData = temp;
+	}
+	else
+	{
+		while (traverse->next != NULL)
+		{
+			traverse = traverse->next;
+		}
+		traverse->next = temp;
+		temp->prev = traverse;
+		temp->next = NULL;
+	}
+
+}
+
+void Doctor::InputSingleDoctor(Doctor** doctorData, char option)
+{
+
+	Doctor* temp = new Doctor;
+	string tempid;
+	system("cls");
+	cout << "\n\n_______________________________________________";
+	cout << "\n\n             Entering Doctor Data";
+	cout << "\n\n_______________________________________________\n";
+	bool uni;
+	int data = 0;
+	do
+	{
+		uni = false;
+		cin.ignore();
+		cout << "\n\n  Enter ID Of Doctor  :  ";
+		getline(cin, tempid);
+		uni = DoctorIdUnique(*doctorData, tempid);
+		if (uni == false)
+		{
+			temp->id = tempid;
+		}
+	} while (uni);
+	cin.ignore();
+	cout << "\n\n  Enter Name Of Doctor   :  ";
+	getline(cin, temp->name);
+	cin.ignore();
+	cout << "\n\n  Enter Age Of Doctor   :  ";
+	getline(cin, temp->age);
+	cin.ignore();
+	cout << "\n\n  Enter CNIC Of Doctor  :  ";
+	getline(cin, temp->cnic);
+	cin.ignore();
+	cout << "\n\n  Enter Gender Of Doctor   :  ";
+	getline(cin, temp->gender);
+	cin.ignore();
+	cout << "\n\n  Enter Blood Group Of Doctor   :  ";
+	getline(cin, temp->bloodgroup);
+	cin.ignore();
+	cout << "\n\n  Enter Specification Of Doctor   :  ";
+	getline(cin, temp->DoctorRole);
+	Doctor* traverse = *doctorData;
+	if (traverse == NULL)
+	{
+		temp->next = temp->prev = NULL;
+		*doctorData = temp;
+	}
+	else
+	{
+		while (traverse->next != NULL)
+		{
+			traverse = traverse->next;
+		}
+		traverse->next = temp;
+		temp->prev = traverse;
+		temp->next = NULL;
+	}
+	temp->DoctorAdmit(*doctorData, data, option);
+
+}
+
+bool Doctor::DoctorIdUnique(Doctor* doctorData, string doctorDataid)
+{
+	bool unique = false;
+	Doctor* temp = doctorData;
+	bool matched = false;
+	while (temp != NULL)
+	{
+		if (temp->id == doctorDataid)
+		{
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n\n\t*Error! Matched Doctor Id Found! *";
+			cout << "\n\n_______________________________________________";
+			matched = true;
+			break;
+		}
+		temp = temp->next;
+	}
+	return matched;
+}
+
+void Doctor::SearchDoctor(Doctor** doctorData, char option, char choice)
+{
+	int data = 0;
+	bool list = false;
+	bool found = true;
+	Doctor* temp = *doctorData;
+	if (option == '1')
+	{
+		data = DoctorsInRoom_1;
+	}
+	else if (option == '2')
+	{
+		data = DoctorsInRoom_2;
+	}
+	else if (option == '3')
+	{
+		data = DoctorsInRoom_3;
+	}
+	cin.ignore();
+	string doctorDataid;
+	cout << "\n  Enter Doctor Id To Search Or  \"*\" To Display Doctors List :  ";
+	getline(cin, doctorDataid);
+	if (doctorDataid == "*")
+	{
+		list = true;
+		temp->DisplayAllDoctors(*doctorData, option);
+	}
+	else if (list == false)
+	{
+		while (temp != NULL)
+		{
+			if (doctorDataid == temp->id)
+			{
+				found = false;
+				system("CLS");
+				temp->DisplayDoctorData(option);
+				if (choice == '3')
+				{
+					cout << "\n\n_______________________________________________";
+					cout << "\n\n\n\t*Modifying Doctor Record! *";
+					cout << "\n\n_______________________________________________";
+					cin.ignore();
+					cout << "\n\n  Enter Role Of Doctor   :  ";
+					getline(cin, temp->DoctorRole);
+				}
+				else if (choice == '4')
+				{
+					cout << "\n\n_______________________________________________";
+					cout << "\n\n\n\t*Deleting Doctor Record! *";
+					cout << "\n\n_______________________________________________";
+					temp->DoctorDischarged(doctorData, doctorDataid, data, option);
+				}
+			}
+			temp = temp->next;
+		}
+
+		if (found)
+		{
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n\n\t*Doctor Record Not Found! *";
+			cout << "\n\n_______________________________________________";
+		}
+	}
+}
+
+void Doctor::ExportTotalDoctors(Doctor** doctorData)
+{
+	Doctor* temp = *doctorData;
+	fstream ExportReservedBeds;
+	ExportReservedBeds.open("Total Doctors In All Rooms.txt", ios::out | ios::trunc);
+	ExportReservedBeds.close();
+	ExportReservedBeds.open("Total Doctors In All Rooms.txt", ios::out | ios::app);
+	cin.ignore();
+	ExportReservedBeds << temp->DoctorsInRoom_1 << endl << temp->DoctorsInRoom_2 << endl << temp->DoctorsInRoom_3;
+	ExportReservedBeds.close();
+}
+void Doctor::ImportTotalDoctors(Doctor** doctorData)
+{
+	Doctor* temp = *doctorData;
+	fstream ImportReservedBeds;
+	ImportReservedBeds.open("Total Doctors In All Rooms.txt", ios::in);
+	ImportReservedBeds >> temp->DoctorsInRoom_1;
+	ImportReservedBeds >> temp->DoctorsInRoom_2;
+	ImportReservedBeds >> temp->DoctorsInRoom_3;
+	ImportReservedBeds.close();
+}
+void Doctor::ImportDoctorsData(Doctor** doctorData, char option)
+{
+	fstream ImportDoctor;
+	string iid, iname, icnic, igender, ibloodgroup, iage, irole;
+	int iroomno;
+	Doctor* temp = new Doctor;
+	if (option == '1')
+	{
+		ImportDoctor.open("Doctors In Room 1.txt", ios::in);
+		for (int i = 0; i < DoctorsInRoom_1; i++)
+		{
+			getline(ImportDoctor, iage);
+			getline(ImportDoctor, iname);
+			getline(ImportDoctor, iid);
+			getline(ImportDoctor, icnic);
+			getline(ImportDoctor, igender);
+			getline(ImportDoctor, ibloodgroup);
+			ImportDoctor >> iroomno;
+			ImportDoctor.ignore();
+			getline(ImportDoctor, irole);
+			insertDoctor(doctorData, iid, iname, iage, icnic, igender, ibloodgroup, iroomno, irole, option);
+		}
+		ImportDoctor.close();
+	}
+
+	if (option == '2')
+	{
+		ImportDoctor.open("Doctors In Room 2.txt");
+		for (int i = 0; i < DoctorsInRoom_2; i++)
+		{
+			getline(ImportDoctor, iage);
+			getline(ImportDoctor, iname);
+			getline(ImportDoctor, iid);
+			getline(ImportDoctor, icnic);
+			getline(ImportDoctor, igender);
+			getline(ImportDoctor, ibloodgroup);
+			ImportDoctor >> iroomno;
+			ImportDoctor.ignore();
+			getline(ImportDoctor, irole);
+			insertDoctor(doctorData, iid, iname, iage, icnic, igender, ibloodgroup, iroomno, irole, option);
+		}
+		ImportDoctor.close();
+	}
+
+	if (option == '3')
+	{
+		ImportDoctor.open("Doctors In Room 3.txt");
+		for (int i = 0; i < DoctorsInRoom_3; i++)
+		{
+			getline(ImportDoctor, iage);
+			getline(ImportDoctor, iname);
+			getline(ImportDoctor, iid);
+			getline(ImportDoctor, icnic);
+			getline(ImportDoctor, igender);
+			getline(ImportDoctor, ibloodgroup);
+			ImportDoctor >> iroomno;
+			ImportDoctor.ignore();
+			getline(ImportDoctor, irole);
+			insertDoctor(doctorData, iid, iname, iage, icnic, igender, ibloodgroup, iroomno, irole, option);
+		}
+		ImportDoctor.close();
+	}
+}
+
+void Doctor::ExportDoctorsData(Doctor* temp, int data, char option)
+{
+	Doctor* doctorData = temp;
+	fstream ExportDoctor;
+	if (option == '1')
+	{
+		ExportDoctor.open("Doctors In Room 1.txt", ios::out | ios::trunc);
+		ExportDoctor.close();
+		ExportDoctor.open("Doctors In Room 1.txt", ios::out | ios::app);
+		data = DoctorsInRoom_1;
+	}
+	else if (option == '2')
+	{
+		ExportDoctor.open("Doctors In Room 2.txt", ios::out | ios::trunc);
+		ExportDoctor.close();
+		ExportDoctor.open("Doctors In Room 2.txt", ios::out | ios::app);
+		data = DoctorsInRoom_2;
+	}
+	else if (option == '3')
+	{
+		ExportDoctor.open("Doctors In Room 3.txt", ios::out | ios::trunc);
+		ExportDoctor.close();
+		ExportDoctor.open("Doctors In Room 3.txt", ios::out | ios::app);
+		data = DoctorsInRoom_3;
+	}
+	cin.ignore();
+	while (doctorData != NULL)
+	{
+		ExportDoctor << doctorData->age << endl << doctorData->name << endl << doctorData->id << endl << doctorData->cnic << endl << doctorData->gender
+			<< endl << doctorData->bloodgroup << endl << doctorData->DoctorRoomNo << endl << doctorData->DoctorRole << endl;
+		doctorData = doctorData->next;
+	}
+	ExportDoctor.close();
+}
+
+void Doctor::DoctorAdmit(Doctor* doctorData, int data, char option)
+{
+	if (option == '1')
+	{
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Doctor Added ";
+		cout << "\n\n_______________________________________________\n\n";
+		DoctorsInRoom_1++;
+		DoctorRoomNo = 1;
+		doctorData->ExportDoctorsData(doctorData, DoctorsInRoom_1, option);
+		doctorData->ExportTotalDoctors(&doctorData);
+	}
+	else if (option == '2')
+	{
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Doctor Added ";
+		cout << "\n\n_______________________________________________\n\n";
+		DoctorsInRoom_2++;
+		DoctorRoomNo = 2;
+		doctorData->ExportDoctorsData(doctorData, DoctorsInRoom_2, option);
+		doctorData->ExportTotalDoctors(&doctorData);
+	}
+	else if (option == '3')
+	{
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Doctor Added ";
+		cout << "\n\n_______________________________________________\n\n";
+		DoctorsInRoom_3++;
+		DoctorRoomNo = 3;
+		doctorData->ExportDoctorsData(doctorData, DoctorsInRoom_3, option);
+		doctorData->ExportTotalDoctors(&doctorData);
+	}
+}
+
+void Doctor::DoctorDischarged(Doctor** doctorData, string patientID, int data, char option)
+{
+	Doctor* p = new Doctor;
+	Doctor* q = new Doctor;
+	Doctor* temp = *doctorData;
+	p = temp;
+	q = temp->next;
+	bool notFound = true;
+	if (p->id == patientID)
+	{
+		*doctorData = q;
+		notFound = false;
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Doctor Removed ";
+		cout << "\n\n_______________________________________________\n\n";
+	}
+	else
+	{
+		while (q->id != patientID)
+		{
+			p = p->next;
+			q = q->next;
+		}
+		if (q->next == NULL)
+		{
+			p->next = NULL;
+			notFound = false;
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n               Doctor Removed ";
+			cout << "\n\n_______________________________________________\n\n";
+		}
+		else
+		{
+			p->next = q->next;
+			q->next->prev = p;
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n               Doctor Removed ";
+			cout << "\n\n_______________________________________________\n\n";
+			notFound = false;
+		}
+	}
+	if (option == '1')
+	{
+		DoctorsInRoom_1--;
+		temp->ExportDoctorsData(*doctorData, DoctorsInRoom_1, option);
+	}
+	else if (option == '2')
+	{
+		DoctorsInRoom_2--;
+		temp->ExportDoctorsData(*doctorData, DoctorsInRoom_2, option);
+	}
+	else
+	{
+		DoctorsInRoom_3--;
+		temp->ExportDoctorsData(*doctorData, DoctorsInRoom_3, option);
+	}
+	temp->ExportTotalDoctors(doctorData);
+}
+
+void Doctor::DisplayDoctorData(char option)
+{
+	cout << "\n\n\t_________________________________________________________________________";
+	cout << "\n\n\t                          Displaying Doctor Data ";
+	cout << "\n\n\t_________________________________________________________________________\n\n";
+	cout << "\n\n\t  Name Of Doctor   :  " << name;
+	cout << "\t\t  Id Of Doctor  :  " << id;
+	cout << "\n\n\t  Cnic Of Doctor  :  " << cnic;
+	cout << "\t\t  Gender Of Doctor   :  " << gender;
+	cout << "\n\n\t  Blood Group Of Doctor   :  " << bloodgroup;
+	cout << "\t\t  Room Number Of Doctor  :  " << DoctorRoomNo;
+	cout << "\n\n\t  Specification Of Doctor  :  " << DoctorRole;
+	cout << "\n\n\t-------------------------------------------------------------------------\n\n";
+	cout << "\n\n\t_________________________________________________________________________";
+	cout << "\n\n\t-------------------------------------------------------------------------\n\n";
+}
+
+void Doctor::DisplayAllDoctors(Doctor* doctorData, char option)
+{
+	Doctor* temp = doctorData;
+	system("cls");
+	int data = 0;
+	cout << "\n\n\t_________________________________________________________________________________";
+	cout << "\n\n\t                          Displaying List Of Doctors ";
+	cout << "\n\n\t_________________________________________________________________________________";
+	if (option == '1')
+	{
+		data = DoctorsInRoom_1;
+	}
+	else if (option == '2')
+	{
+		data = DoctorsInRoom_2;
+	}
+	else if (option == '3')
+	{
+		data = DoctorsInRoom_3;
+	}
+	while (temp != NULL)
+	{
+		temp->DisplayDoctorData(option);
+		temp = temp->next;
+	}
+}
+Doctor::~Doctor()
+{
+	delete next;
+	delete prev;
+}
+int Doctor::DoctorsInRoom_1 = 0;
+int Doctor::DoctorsInRoom_2 = 0;
+int Doctor::DoctorsInRoom_3 = 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Nurse :public personType
+{
+	int nurseRoomNo;
+	string nurseRole;
+	static int NursesInRoom_1;//These are the total Nurse in a room
+	static int NursesInRoom_2;//We Will Assign this to the Nurse + 1
+	static int NursesInRoom_3;
+	Nurse* next = NULL;
+	Nurse* prev = NULL;
+public:
+	Nurse();
+	void SetPersonData(string iid, string iname, string icnic, string igender, string ibloodgroup, string age);
+	void insertNurse(Nurse** nurseData, string iid, string iname, string iage, string icnic, string igender, string ibloodgroup, int iroomno, string irole, char option);
+	void InputSingleNurse(Nurse** Nursedata, char option);
+	bool NurseIdUnique(Nurse* nurseData, string tempid);
+	void SearchNurse(Nurse** nurseData, char option, char choice);
+	void ExportTotalNurses(Nurse** nurseData);
+	void ImportTotalNurses(Nurse** nurseData);
+	void ImportNursesData(Nurse** nurseData, char  option);
+	void ExportNursesData(Nurse* nurseData, int data, char option);
+	void NurseAdmit(Nurse* nurseData, int data, char  option);
+	void NurseDischarged(Nurse** nurseData, string NurseID, int data, char  option);
+	void DisplayNurseData(char option);
+	void DisplayAllNurses(Nurse* nurseData, char option);
+	~Nurse();
+};
+
+Nurse::Nurse()
+{
+	nurseRole = "NULL";
+	nurseRoomNo = 0;
+	next = NULL;
+	prev = NULL;
+}
+void Nurse::SetPersonData(string iid, string iname, string icnic, string igender, string ibloodgroup, string age)
+{
+	id = iid;
+	name = iname;
+	cnic = icnic;
+	gender = igender;
+	bloodgroup = ibloodgroup;
+}
+void Nurse::insertNurse(Nurse** nurseData, string iid, string iname, string iage, string icnic, string igender, string ibloodgroup, int iroomno, string irole, char option)
+{
+	Nurse* temp = new Nurse;
+	temp->id = iid;
+	temp->name = iname;
+	temp->age = iage;
+	temp->cnic = icnic;
+	temp->gender = igender;
+	temp->nurseRoomNo = iroomno;
+	temp->bloodgroup = ibloodgroup;
+	temp->nurseRole = irole;
+	Nurse* traverse = *nurseData;
+	if (traverse == NULL)
+	{
+		temp->next = temp->prev = NULL;
+		*nurseData = temp;
+	}
+	else
+	{
+		while (traverse->next != NULL)
+		{
+			traverse = traverse->next;
+		}
+		traverse->next = temp;
+		temp->prev = traverse;
+		temp->next = NULL;
+	}
+
+}
+
+void Nurse::InputSingleNurse(Nurse** nurseData, char option)
+{
+
+	Nurse* temp = new Nurse;
+	string tempid;
+	system("cls");
+	cout << "\n\n_______________________________________________";
+	cout << "\n\n             Entering Nurse Data";
+	cout << "\n\n_______________________________________________\n";
+	bool uni;
+	int data = 0;
+	do
+	{
+		uni = false;
+		cin.ignore();
+		cout << "\n\n  Enter ID Of Nurse  :  ";
+		getline(cin, tempid);
+		uni = NurseIdUnique(*nurseData, tempid);
+		if (uni == false)
+		{
+			temp->id = tempid;
+		}
+	} while (uni);
+	cin.ignore();
+	cout << "\n\n  Enter Name Of Nurse   :  ";
+	getline(cin, temp->name);
+	cin.ignore();
+	cout << "\n\n  Enter Age Of Nurse   :  ";
+	getline(cin, temp->age);
+	cin.ignore();
+	cout << "\n\n  Enter CNIC Of Nurse  :  ";
+	getline(cin, temp->cnic);
+	cin.ignore();
+	cout << "\n\n  Enter Gender Of Nurse   :  ";
+	getline(cin, temp->gender);
+	cin.ignore();
+	cout << "\n\n  Enter Blood Group Of Nurse   :  ";
+	getline(cin, temp->bloodgroup);
+	cin.ignore();
+	cout << "\n\n  Enter Role Of Nurse   :  ";
+	getline(cin, temp->nurseRole);
+	Nurse* traverse = *nurseData;
+	if (traverse == NULL)
+	{
+		temp->next = temp->prev = NULL;
+		*nurseData = temp;
+	}
+	else
+	{
+		while (traverse->next != NULL)
+		{
+			traverse = traverse->next;
+		}
+		traverse->next = temp;
+		temp->prev = traverse;
+		temp->next = NULL;
+	}
+	temp->NurseAdmit(*nurseData, data, option);
+
+}
+
+bool Nurse::NurseIdUnique(Nurse* nurseData, string nurseDataid)
+{
+	bool unique = false;
+	Nurse* temp = nurseData;
+	bool matched = false;
+	while (temp != NULL)
+	{
+		if (temp->id == nurseDataid)
+		{
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n\n\t*Error! Matched Nurse Id Found! *";
+			cout << "\n\n_______________________________________________";
+			matched = true;
+			break;
+		}
+		temp = temp->next;
+	}
+	return matched;
+}
+
+void Nurse::SearchNurse(Nurse** nurseData, char option, char choice)
+{
+	int data = 0;
+	bool list = false;
+	bool found = true;
+	Nurse* temp = *nurseData;
+	if (option == '1')
+	{
+		data = NursesInRoom_1;
+	}
+	else if (option == '2')
+	{
+		data = NursesInRoom_2;
+	}
+	else if (option == '3')
+	{
+		data = NursesInRoom_3;
+	}
+	cin.ignore();
+	string nurseDataid;
+	cout << "\n  Enter Nurse Id To Search Or  \"*\" To Display Nurses List :  ";
+	getline(cin, nurseDataid);
+	if (nurseDataid == "*")
+	{
+		list = true;
+		temp->DisplayAllNurses(*nurseData, option);
+	}
+	else if (list == false)
+	{
+		while (temp != NULL)
+		{
+			if (nurseDataid == temp->id)
+			{
+				found = false;
+				system("CLS");
+				temp->DisplayNurseData(option);
+				if (choice == '3')
+				{
+					cout << "\n\n_______________________________________________";
+					cout << "\n\n\n\t*Modifying Nurse Record! *";
+					cout << "\n\n_______________________________________________";
+					cin.ignore();
+					cout << "\n\n  Enter Role Of Nurse   :  ";
+					getline(cin, temp->nurseRole);
+				}
+				else if (choice == '4')
+				{
+					cout << "\n\n_______________________________________________";
+					cout << "\n\n\n\t*Deleting Nurse Record! *";
+					cout << "\n\n_______________________________________________";
+					temp->NurseDischarged(nurseData, nurseDataid, data, option);
+				}
+			}
+			temp = temp->next;
+		}
+
+		if (found)
+		{
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n\n\t*Nurse Record Not Found! *";
+			cout << "\n\n_______________________________________________";
+		}
+	}
+}
+
+void Nurse::ExportTotalNurses(Nurse** nurseData)
+{
+	Nurse* temp = *nurseData;
+	fstream ExportReservedBeds;
+	ExportReservedBeds.open("Total Nurses In All Rooms.txt", ios::out | ios::trunc);
+	ExportReservedBeds.close();
+	ExportReservedBeds.open("Total Nurses In All Rooms.txt", ios::out | ios::app);
+	cin.ignore();
+	ExportReservedBeds << temp->NursesInRoom_1 << endl << temp->NursesInRoom_2 << endl << temp->NursesInRoom_3;
+	ExportReservedBeds.close();
+}
+void Nurse::ImportTotalNurses(Nurse** nurseData)
+{
+	Nurse* temp = *nurseData;
+	fstream ImportReservedBeds;
+	ImportReservedBeds.open("Total Nurses In All Rooms.txt", ios::in);
+	ImportReservedBeds >> temp->NursesInRoom_1;
+	ImportReservedBeds >> temp->NursesInRoom_2;
+	ImportReservedBeds >> temp->NursesInRoom_3;
+	ImportReservedBeds.close();
+}
+void Nurse::ImportNursesData(Nurse** nurseData, char option)
+{
+	fstream ImportNurse;
+	string iid, iname, icnic, igender, ibloodgroup, iage, irole;
+	int iroomno;
+	Nurse* temp = new Nurse;
+	if (option == '1')
+	{
+		ImportNurse.open("Nurses In Room 1.txt", ios::in);
+		for (int i = 0; i < NursesInRoom_1; i++)
+		{
+			getline(ImportNurse, iage);
+			getline(ImportNurse, iname);
+			getline(ImportNurse, iid);
+			getline(ImportNurse, icnic);
+			getline(ImportNurse, igender);
+			getline(ImportNurse, ibloodgroup);
+			ImportNurse >> iroomno;
+			ImportNurse.ignore();
+			getline(ImportNurse, irole);
+			insertNurse(nurseData, iid, iname, iage, icnic, igender, ibloodgroup, iroomno, irole, option);
+		}
+		ImportNurse.close();
+	}
+
+	if (option == '2')
+	{
+		ImportNurse.open("Nurses In Room 2.txt");
+		for (int i = 0; i < NursesInRoom_2; i++)
+		{
+			getline(ImportNurse, iage);
+			getline(ImportNurse, iname);
+			getline(ImportNurse, iid);
+			getline(ImportNurse, icnic);
+			getline(ImportNurse, igender);
+			getline(ImportNurse, ibloodgroup);
+			ImportNurse >> iroomno;
+			ImportNurse.ignore();
+			getline(ImportNurse, irole);
+			insertNurse(nurseData, iid, iname, iage, icnic, igender, ibloodgroup, iroomno, irole, option);
+		}
+		ImportNurse.close();
+	}
+
+	if (option == '3')
+	{
+		ImportNurse.open("Nurses In Room 3.txt");
+		for (int i = 0; i < NursesInRoom_3; i++)
+		{
+			getline(ImportNurse, iage);
+			getline(ImportNurse, iname);
+			getline(ImportNurse, iid);
+			getline(ImportNurse, icnic);
+			getline(ImportNurse, igender);
+			getline(ImportNurse, ibloodgroup);
+			ImportNurse >> iroomno;
+			ImportNurse.ignore();
+			getline(ImportNurse, irole);
+			insertNurse(nurseData, iid, iname, iage, icnic, igender, ibloodgroup, iroomno, irole, option);
+		}
+		ImportNurse.close();
+	}
+}
+
+void Nurse::ExportNursesData(Nurse* temp, int data, char option)
+{
+	Nurse* nurseData = temp;
+	fstream ExportNurse;
+	if (option == '1')
+	{
+		ExportNurse.open("Nurses In Room 1.txt", ios::out | ios::trunc);
+		ExportNurse.close();
+		ExportNurse.open("Nurses In Room 1.txt", ios::out | ios::app);
+		data = NursesInRoom_1;
+	}
+	else if (option == '2')
+	{
+		ExportNurse.open("Nurses In Room 2.txt", ios::out | ios::trunc);
+		ExportNurse.close();
+		ExportNurse.open("Nurses In Room 2.txt", ios::out | ios::app);
+		data = NursesInRoom_2;
+	}
+	else if (option == '3')
+	{
+		ExportNurse.open("Nurses In Room 3.txt", ios::out | ios::trunc);
+		ExportNurse.close();
+		ExportNurse.open("Nurses In Room 3.txt", ios::out | ios::app);
+		data = NursesInRoom_3;
+	}
+	cin.ignore();
+	while (nurseData != NULL)
+	{
+		ExportNurse << nurseData->age << endl << nurseData->name << endl << nurseData->id << endl << nurseData->cnic << endl << nurseData->gender
+			<< endl << nurseData->bloodgroup << endl << nurseData->nurseRoomNo << endl << nurseData->nurseRole << endl;
+		nurseData = nurseData->next;
+	}
+	ExportNurse.close();
+}
+
+void Nurse::NurseAdmit(Nurse* nurseData, int data, char option)
+{
+	if (option == '1')
+	{
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Nurse Addedd ";
+		cout << "\n\n_______________________________________________\n\n";
+		NursesInRoom_1++;
+		nurseData->ExportNursesData(nurseData, NursesInRoom_1, option);
+		nurseData->ExportTotalNurses(&nurseData);
+	}
+	else if (option == '2')
+	{
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Nurse Addedd ";
+		cout << "\n\n_______________________________________________\n\n";
+		NursesInRoom_2++;
+		nurseData->ExportNursesData(nurseData, NursesInRoom_2, option);
+		nurseData->ExportTotalNurses(&nurseData);
+	}
+	else if (option == '3')
+	{
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Nurse Addedd ";
+		cout << "\n\n_______________________________________________\n\n";
+		NursesInRoom_3++;
+		nurseData->ExportNursesData(nurseData, NursesInRoom_3, option);
+		nurseData->ExportTotalNurses(&nurseData);
+	}
+}
+
+void Nurse::NurseDischarged(Nurse** nurseData, string patientID, int data, char option)
+{
+	Nurse* p = new Nurse;
+	Nurse* q = new Nurse;
+	Nurse* temp = *nurseData;
+	p = temp;
+	q = temp->next;
+	bool notFound = true;
+	if (p->id == patientID)
+	{
+		*nurseData = q;
+		notFound = false;
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Nurse Deleted ";
+		cout << "\n\n_______________________________________________\n\n";
+	}
+	else
+	{
+		while (q->id != patientID)
+		{
+			p = p->next;
+			q = q->next;
+		}
+		if (q->next == NULL)
+		{
+			p->next = NULL;
+			notFound = false;
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n               Nurse Deleted ";
+			cout << "\n\n_______________________________________________\n\n";
+		}
+		else
+		{
+			p->next = q->next;
+			q->next->prev = p;
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n               Nurse Deleted ";
+			cout << "\n\n_______________________________________________\n\n";
+			notFound = false;
+		}
+	}
+	if (option == '1')
+	{
+		NursesInRoom_1--;
+		temp->ExportNursesData(*nurseData, NursesInRoom_1, option);
+	}
+	else if (option == '2')
+	{
+		NursesInRoom_2--;
+		temp->ExportNursesData(*nurseData, NursesInRoom_2, option);
+	}
+	else
+	{
+		NursesInRoom_3--;
+		temp->ExportNursesData(*nurseData, NursesInRoom_3, option);
+	}
+	temp->ExportTotalNurses(nurseData);
+}
+
+void Nurse::DisplayNurseData(char option)
+{
+	cout << "\n\n\t_________________________________________________________________________";
+	cout << "\n\n\t                          Displaying Nurse Data ";
+	cout << "\n\n\t_________________________________________________________________________\n\n";
+	cout << "\n\n\t  Name Of Nurse   :  " << name;
+	cout << "\t\t  Id Of Nurse  :  " << id;
+	cout << "\n\n\t  Cnic Of Nurse  :  " << cnic;
+	cout << "\t\t  Gender Of Nurse   :  " << gender;
+	cout << "\n\n\t  Blood Group Of Nurse   :  " << bloodgroup;
+	cout << "\t\t  Room Number Of Nurse  :  " << nurseRoomNo;
+	cout << "\n\n\t  Role Of Nurse  :  " << nurseRole;
+	cout << "\n\n\t-------------------------------------------------------------------------\n\n";
+	cout << "\n\n\t_________________________________________________________________________";
+	cout << "\n\n\t-------------------------------------------------------------------------\n\n";
+}
+
+void Nurse::DisplayAllNurses(Nurse* nurseData, char option)
+{
+	Nurse* temp = nurseData;
+	system("cls");
+	int data = 0;
+	cout << "\n\n\t_________________________________________________________________________________";
+	cout << "\n\n\t                          Displaying List Of Nurses ";
+	cout << "\n\n\t_________________________________________________________________________________";
+	if (option == '1')
+	{
+		data = NursesInRoom_1;
+	}
+	else if (option == '2')
+	{
+		data = NursesInRoom_2;
+	}
+	else if (option == '3')
+	{
+		data = NursesInRoom_3;
+	}
+	while (temp != NULL)
+	{
+		temp->DisplayNurseData(option);
+		temp = temp->next;
+	}
+}
+Nurse::~Nurse()
+{
+	delete next;
+	delete prev;
+}
+int Nurse::NursesInRoom_1 = 0;
+int Nurse::NursesInRoom_2 = 0;
+int Nurse::NursesInRoom_3 = 0;
+
+
+class Corona
+{
+protected:
+	char* CurrentTest;
+	char* PreviousTest;
+	string TestResult;
+	time_t now = time(0);
+public:
+	Corona();
+	void inputTest();
+	string ReturnResult();
+	void displayTest();
+};
+
+Corona::Corona()
+{
+	this->CurrentTest = ctime(&now);
+	PreviousTest = CurrentTest;
+}
+void Corona::inputTest()
+{
+	this->PreviousTest = CurrentTest;
+	this->CurrentTest = ctime(&now);
+	bool input = true;
+	do
+	{
+		cin.ignore();
+		input = false;
+		cout << "\n\n  Enter Test Result  :  ";
+		getline(cin, TestResult);
+		if (TestResult == "+ve" || TestResult == "-ve" || TestResult == "Positive" || TestResult == "Negative")
+		{
+			input = false;
+		}
+		else
+		{
+			input = true;
+		}
+	} while (input);
+}
+
+string Corona::ReturnResult()
+{
+	return this->TestResult;
+}
+
+void Corona::displayTest()
+{
+	cout << "\n\n\t  Current Test Date  :  " << CurrentTest;
+	cout << "\n\t  Previous Test Date  :  " << PreviousTest;
+	cout << "\n\t  Test Result  :  " << TestResult;
+}
+
+
+class GeneralWard
+{
+protected:
+	string diseasename;
+public:
+	GeneralWard();
+	void InputDisease();
+	void DisplayDisease();
+};
+
+void GeneralWard::InputDisease()
+{
+	cout << "\n\n  Enter The Disease Name / Symptoms  :  ";
+	cin >> diseasename;
+}
+
+void GeneralWard::DisplayDisease()
+{
+	cout << "\n\n\t  Disease And Symptoms  :  " << diseasename;
+}
+
+GeneralWard::GeneralWard()
+{
+	diseasename = "NULL";
+}
+
+
+
+class Patient :public personType, public Corona, public GeneralWard
+{
+	int patientbedno;
+	int patientroomno;
+	int totalbeds = 30;
+	static int ReservedBedsRoom_1;//These are the total reserved beds in a room
+	static int ReservedBedsRoom_2;//We Will Assign this to the patient bed number + 1
+	static int ReservedBedsRoom_3;
+	char* admit_date;
+	char* discharge_date;
+	Patient* prev;
+	Patient* next;
+public:
+	Patient();
+	void SetPersonData(string iid, string iname, string icnic, string igender, string ibloodgroup, string age);
+	void insertPatient(Patient** patientData, string iid, string iname, string iage, string icnic, string igender, string ibloodgroup, int ipatientbedno, int ipatientroomno, string iTestResult, char option);
+	void InputSinglePatient(Patient** patientData, char option);
+	bool PatientIdUnique(Patient* patientData, string tempid);
+	void SearchPatient(Patient** patientdata, char option, char choice);
+	void ImportTotalReservedBeds(Patient** patientdata);
+	void ExportTotalReservedBeds(Patient** patientdata);
+	void ImportPatientsData(Patient** patientdata, char  option);
+	void ExportPatientsData(Patient* patientdata, int data, char option);
+	void PatientAdmit(Patient* patientdata, int data, char  option);
+	void PatientDischarged(Patient** patientdata, string patientID, int data, char  option);
+	void DisplayPatientData(char option);
+	void DisplayAllPatients(Patient* patientdata, char option);
+	~Patient();
+};
+
+
+Patient::Patient()
+{
+	patientbedno = 0;
+	totalbeds = 30;
+	patientroomno = 0;
+	admit_date = ctime(&now);
+	discharge_date = ctime(&now);
+	next = NULL;
+	prev = NULL;
+}
+void Patient::SetPersonData(string iid, string iname, string icnic, string igender, string ibloodgroup, string age)
+{
+	id = iid;
+	name = iname;
+	cnic = icnic;
+	gender = igender;
+	bloodgroup = ibloodgroup;
+}
+void Patient::insertPatient(Patient** patientData, string iid, string iname, string iage, string icnic, string igender, string ibloodgroup, int ipatientbedno, int ipatientroomno, string iTestResult, char option)
+{
+	Patient* temp = new Patient;
+	temp->id = iid;
+	temp->name = iname;
+	temp->age = iage;
+	temp->cnic = icnic;
+	temp->gender = igender;
+	temp->bloodgroup = ibloodgroup;
+	temp->patientbedno = ipatientbedno;
+	temp->patientroomno = ipatientroomno;
+	if (option == '1' || option == '2')
+	{
+		temp->TestResult = iTestResult;
+	}
+	else if (option == '3')
+	{
+		temp->diseasename = iTestResult;
+	}
+	Patient* traverse = *patientData;
+	if (traverse == NULL)
+	{
+		temp->next = temp->prev = NULL;
+		*patientData = temp;
+	}
+	else
+	{
+		while (traverse->next != NULL)
+		{
+			traverse = traverse->next;
+		}
+		traverse->next = temp;
+		temp->prev = traverse;
+		temp->next = NULL;
+	}
+
+}
+
+void Patient::InputSinglePatient(Patient** patientdata, char option)
+{
+	if (ReservedBedsRoom_1 >= totalbeds && option == '1')
+	{
+		cout << "\n\n  Corona Ward Is Full Patient Cannot Be Admitted";
+	}
+	else if (ReservedBedsRoom_2 >= totalbeds && option == '2')
+	{
+		cout << "\n\n  Corona Critical Ward Is Full Patient Cannot Be Admitted";
+	}
+	else if (ReservedBedsRoom_3 >= totalbeds && option == '3')
+	{
+		cout << "\n\n  General Ward Is Full Patient Cannot Be Admitted";
+	}
+	else
+	{
+		Patient* temp = new Patient;
+		string tempid;
+		system("cls");
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n             Entering Patient Data";
+		cout << "\n\n_______________________________________________\n";
+		bool uni;
+		int data = 0;
+		do
+		{
+			uni = false;
+			cin.ignore();
+			cout << "\n\n  Enter ID Of Patient  :  ";
+			getline(cin, tempid);
+			uni = PatientIdUnique(*patientdata, tempid);
+			if (uni == false)
+			{
+				temp->id = tempid;
+			}
+		} while (uni);
+		cin.ignore();
+		cout << "\n\n  Enter Name Of Patient   :  ";
+		getline(cin, temp->name);
+		cin.ignore();
+		cout << "\n\n  Enter Age Of Patient   :  ";
+		getline(cin, temp->age);
+		cin.ignore();
+		cout << "\n\n  Enter CNIC Of Patient  :  ";
+		getline(cin, temp->cnic);
+		cin.ignore();
+		cout << "\n\n  Enter Gender Of Patient   :  ";
+		getline(cin, temp->gender);
+		cin.ignore();
+		cout << "\n\n  Enter Blood Group Of Patient   :  ";
+		getline(cin, temp->bloodgroup);
+		admit_date = ctime(&now);
+		if (option == '1')
+		{
+			temp->Corona::inputTest();
+			temp->patientbedno = ReservedBedsRoom_1 + 1;
+			temp->patientroomno = 1;
+		}
+		else if (option == '2')
+		{
+			temp->Corona::inputTest();
+			temp->patientbedno = ReservedBedsRoom_2 + 1;
+			temp->patientroomno = 2;
+		}
+		else if (option == '3')
+		{
+			temp->GeneralWard::InputDisease();
+			temp->patientbedno = ReservedBedsRoom_3 + 1;
+			temp->patientroomno = 3;
+		}
+		Patient* traverse = *patientdata;
+		if (traverse == NULL)
+		{
+			temp->next = temp->prev = NULL;
+			*patientdata = temp;
+		}
+		else
+		{
+			while (traverse->next != NULL)
+			{
+				traverse = traverse->next;
+			}
+			traverse->next = temp;
+			temp->prev = traverse;
+			temp->next = NULL;
+		}
+		temp->PatientAdmit(*patientdata, data, option);
+	}
+
+}
+
+bool Patient::PatientIdUnique(Patient* patientData, string patientDataid)
+{
+	bool unique = false;
+	Patient* temp = patientData;
+	bool matched = false;
+	while (temp != NULL)
+	{
+		if (temp->id == patientDataid)
+		{
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n\n\t*Error! Matched Patient Id Found! *";
+			cout << "\n\n_______________________________________________";
+			matched = true;
+			break;
+		}
+		temp = temp->next;
+	}
+	return matched;
+}
+
+void Patient::SearchPatient(Patient** patientdata, char option, char choice)
+{
+	int data = 0;
+	bool list = false;
+	bool found = true;
+	Patient* temp = *patientdata;
+	if (option == '1')
+	{
+		data = ReservedBedsRoom_1;
+	}
+	else if (option == '2')
+	{
+		data = ReservedBedsRoom_2;
+	}
+	else if (option == '3')
+	{
+		data = ReservedBedsRoom_3;
+	}
+	cin.ignore();
+	string patientDataid;
+	cout << "\n  Enter Patient Id To Search Or  \"*\" To Display Patients List :  ";
+	getline(cin, patientDataid);
+	if (patientDataid == "*")
+	{
+		list = true;
+		temp->DisplayAllPatients(*patientdata, option);
+	}
+	else if (list == false)
+	{
+		while (temp != NULL)
+		{
+			if (patientDataid == temp->id)
+			{
+				found = false;
+				system("CLS");
+				temp->DisplayPatientData(option);
+				if (option == '1' && choice == '3' || option == '2' && choice == '3')
+				{
+					cout << "\n\n_______________________________________________";
+					cout << "\n\n\n\t*Modifying Patient Record! *";
+					cout << "\n\n_______________________________________________";
+					temp->Corona::inputTest();
+					if (temp->ReturnResult() == "-ve" || temp->ReturnResult() == "Negative")
+					{
+						temp->PatientDischarged(patientdata, patientDataid, data, option);
+					}
+				}
+				else if (option == '3' && choice == '3')
+				{
+					temp->GeneralWard::InputDisease();
+				}
+				else if (choice == '4')
+				{
+					cout << "\n\n_______________________________________________";
+					cout << "\n\n\n\t*Deleting Patient Record! *";
+					cout << "\n\n_______________________________________________";
+					temp->PatientDischarged(patientdata, patientDataid, data, option);
+				}
+			}
+			temp = temp->next;
+		}
+
+		if (found)
+		{
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n\n\t*Patient Record Not Found! *";
+			cout << "\n\n_______________________________________________";
+		}
+	}
+}
+
+void Patient::ExportTotalReservedBeds(Patient** patientdata)
+{
+	Patient* temp = *patientdata;
+	fstream ExportReservedBeds;
+	ExportReservedBeds.open("Total Reserved Beds In All Rooms.txt", ios::out | ios::trunc);
+	ExportReservedBeds.close();
+	ExportReservedBeds.open("Total Reserved Beds In All Rooms.txt", ios::out | ios::app);
+	cin.ignore();
+	ExportReservedBeds << temp->ReservedBedsRoom_1 << endl << temp->ReservedBedsRoom_2 << endl << temp->ReservedBedsRoom_3;
+	ExportReservedBeds.close();
+}
+void Patient::ImportTotalReservedBeds(Patient** patientdata)
+{
+	Patient* temp = *patientdata;
+	fstream ImportReservedBeds;
+	ImportReservedBeds.open("Total Reserved Beds In All Rooms.txt", ios::in);
+	ImportReservedBeds >> temp->ReservedBedsRoom_1;
+	ImportReservedBeds >> temp->ReservedBedsRoom_2;
+	ImportReservedBeds >> temp->ReservedBedsRoom_3;
+	ImportReservedBeds.close();
+}
+void Patient::ImportPatientsData(Patient** patientdata, char option)
+{
+	fstream ImportPatient;
+	string iid, iname, icnic, igender, ibloodgroup, iage, iTestResult;
+	int ipatientbedno, ipatientroomno;
+	Patient* temp = new Patient;
+	if (option == '1')
+	{
+		ImportPatient.open("Patients In Room 1.txt", ios::in);
+		for (int i = 0; i < ReservedBedsRoom_1; i++)
+		{
+			getline(ImportPatient, iage);
+			getline(ImportPatient, iname);
+			getline(ImportPatient, iid);
+			getline(ImportPatient, icnic);
+			getline(ImportPatient, igender);
+			getline(ImportPatient, ibloodgroup);
+			ImportPatient >> ipatientbedno;
+			ImportPatient >> ipatientroomno;
+			ImportPatient.ignore();
+			getline(ImportPatient, iTestResult);
+			insertPatient(patientdata, iid, iname, iage, icnic, igender, ibloodgroup, ipatientbedno, ipatientroomno, iTestResult, option);
+		}
+		ImportPatient.close();
+	}
+
+	if (option == '2')
+	{
+		ImportPatient.open("Patients In Room 2.txt");
+		for (int i = 0; i < ReservedBedsRoom_2; i++)
+		{
+			getline(ImportPatient, iage);
+			getline(ImportPatient, iname);
+			getline(ImportPatient, iid);
+			getline(ImportPatient, icnic);
+			getline(ImportPatient, igender);
+			getline(ImportPatient, ibloodgroup);
+			ImportPatient >> ipatientbedno;
+			ImportPatient >> ipatientroomno;
+			ImportPatient.ignore();
+			getline(ImportPatient, iTestResult);
+			insertPatient(patientdata, iid, iname, iage, icnic, igender, ibloodgroup, ipatientbedno, ipatientroomno, iTestResult, option);
+		}
+		ImportPatient.close();
+	}
+
+	if (option == '3')
+	{
+		ImportPatient.open("Patients In Room 3.txt");
+		for (int i = 0; i < ReservedBedsRoom_3; i++)
+		{
+			getline(ImportPatient, iage);
+			getline(ImportPatient, iname);
+			getline(ImportPatient, iid);
+			getline(ImportPatient, icnic);
+			getline(ImportPatient, igender);
+			getline(ImportPatient, ibloodgroup);
+			ImportPatient >> ipatientbedno;
+			ImportPatient >> ipatientroomno;
+			ImportPatient.ignore();
+			getline(ImportPatient, iTestResult);
+			insertPatient(patientdata, iid, iname, iage, icnic, igender, ibloodgroup, ipatientbedno, ipatientroomno, iTestResult, option);
+		}
+		ImportPatient.close();
+	}
+}
+
+void Patient::ExportPatientsData(Patient* temp, int data, char option)
+{
+	Patient* patientdata = temp;
+	fstream ExportPatient;
+	if (option == '1')
+	{
+		ExportPatient.open("Patients In Room 1.txt", ios::out | ios::trunc);
+		ExportPatient.close();
+		ExportPatient.open("Patients In Room 1.txt", ios::out | ios::app);
+		data = ReservedBedsRoom_1;
+	}
+	else if (option == '2')
+	{
+		ExportPatient.open("Patients In Room 2.txt", ios::out | ios::trunc);
+		ExportPatient.close();
+		ExportPatient.open("Patients In Room 2.txt", ios::out | ios::app);
+		data = ReservedBedsRoom_2;
+	}
+	else if (option == '3')
+	{
+		ExportPatient.open("Patients In Room 3.txt", ios::out | ios::trunc);
+		ExportPatient.close();
+		ExportPatient.open("Patients In Room 3.txt", ios::out | ios::app);
+		data = ReservedBedsRoom_3;
+	}
+	cin.ignore();
+	while (patientdata != NULL)
+	{
+		ExportPatient << patientdata->age << endl << patientdata->name << endl << patientdata->id << endl << patientdata->cnic << endl << patientdata->gender
+			<< endl << patientdata->bloodgroup << endl << patientdata->patientbedno
+			<< endl << patientdata->patientroomno << endl << patientdata->TestResult << endl;
+		patientdata = patientdata->next;
+	}
+	ExportPatient.close();
+}
+
+void Patient::PatientAdmit(Patient* patientdata, int data, char option)
+{
+	if (option == '1')
+	{
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Patient Admitted ";
+		cout << "\n\n_______________________________________________\n\n";
+		ReservedBedsRoom_1++;
+		patientdata->ExportPatientsData(patientdata, ReservedBedsRoom_1, option);
+		patientdata->ExportTotalReservedBeds(&patientdata);
+	}
+	else if (option == '2')
+	{
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Patient Admitted ";
+		cout << "\n\n_______________________________________________\n\n";
+		ReservedBedsRoom_2++;
+		patientdata->ExportPatientsData(patientdata, ReservedBedsRoom_2, option);
+		patientdata->ExportTotalReservedBeds(&patientdata);
+	}
+	else if (option == '3')
+	{
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Patient Admitted ";
+		cout << "\n\n_______________________________________________\n\n";
+		ReservedBedsRoom_3++;
+		patientdata->ExportPatientsData(patientdata, ReservedBedsRoom_3, option);
+		patientdata->ExportTotalReservedBeds(&patientdata);
+	}
+}
+
+void Patient::PatientDischarged(Patient** patientData, string patientID, int data, char option)
+{
+	Patient* p = new Patient;
+	Patient* q = new Patient;
+	Patient* temp = *patientData;
+	p = temp;
+	q = temp->next;
+	bool notFound = true;
+	if (p->id == patientID)
+	{
+		*patientData = q;
+		notFound = false;
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n               Patient Discharged ";
+		cout << "\n\n_______________________________________________\n\n";
+	}
+	else
+	{
+		while (q->id != patientID)
+		{
+			p = p->next;
+			q = q->next;
+		}
+		if (q->next == NULL)
+		{
+			p->next = NULL;
+			notFound = false;
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n               Patient Discharged ";
+			cout << "\n\n_______________________________________________\n\n";
+		}
+		else
+		{
+			p->next = q->next;
+			q->next->prev = p;
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n               Patient Discharged ";
+			cout << "\n\n_______________________________________________\n\n";
+			notFound = false;
+		}
+	}
+	if (option == '1')
+	{
+		ReservedBedsRoom_1--;
+		temp->ExportPatientsData(*patientData, ReservedBedsRoom_1, option);
+	}
+	else if (option == '2')
+	{
+		ReservedBedsRoom_2--;
+		temp->ExportPatientsData(*patientData, ReservedBedsRoom_2, option);
+	}
+	else
+	{
+		ReservedBedsRoom_3--;
+		temp->ExportPatientsData(*patientData, ReservedBedsRoom_3, option);
+	}
+	temp->ExportTotalReservedBeds(patientData);
+}
+
+void Patient::DisplayPatientData(char option)
+{
+
+	if (option == '1' || option == '2')
+	{
+		cout << "\n\n\t_________________________________________________________________________";
+		cout << "\n\n\t                          Displaying Patient Data ";
+		cout << "\n\n\t_________________________________________________________________________\n\n";
+		cout << "\n\n\t  Name Of Patient   :  " << name;
+		cout << "\t\t  Id Of Patient  :  " << id;
+		cout << "\n\n\t  Cnic Of Patient  :  " << cnic;
+		cout << "\t\t  Gender Of Patient   :  " << gender;
+		cout << "\n\n\t  Blood Group Of Patient   :  " << bloodgroup;
+		cout << "\n\n\t  Admit Date Of Patient  :  " << admit_date << endl;
+		cout << "\n\t-------------------------------------------------------------------------";
+		cout << "\n\t_________________________________________________________________________";
+		cout << "\n\n\t  Patient's Room Number  :  " << patientroomno;
+		cout << "\n\n\t  Patient's Bed Number   :  " << patientbedno;
+		Corona::displayTest();
+	}
+	else if (option == '3')
+	{
+		cout << "\n\n\t_________________________________________________________________________";
+		cout << "\n\n\t                          Displaying Patient Data ";
+		cout << "\n\n\t_________________________________________________________________________\n\n";
+		cout << "\n\n\t  Name Of Patient   :  " << name;
+		cout << "\t\t  Id Of Patient  :  " << id;
+		cout << "\n\n\t  Cnic Of Patient  :  " << cnic;
+		cout << "\t\t  Gender Of Patient   :  " << gender;
+		cout << "\n\n\t  Blood Group Of Patient   :  " << bloodgroup;
+		cout << "\n\n\t  Admit Date Of Patient  :  " << admit_date << endl;
+		cout << "\n\t-------------------------------------------------------------------------";
+		cout << "\n\t_________________________________________________________________________";
+		cout << "\n\n\t  Patient's Room Number  :  " << patientroomno;
+		cout << "\n\n\t  Patient's Bed Number   :  " << patientbedno;
+		GeneralWard::DisplayDisease();
+	}
+	cout << "\n\n\t_________________________________________________________________________";
+	cout << "\n\n\t-------------------------------------------------------------------------\n\n";
+}
+
+void Patient::DisplayAllPatients(Patient* patientdata, char option)
+{
+	Patient* temp = patientdata;
+	system("cls");
+	int data = 0;
+	cout << "\n\n\t_________________________________________________________________________________";
+	cout << "\n\n\t                          Displaying List Of Patients ";
+	cout << "\n\n\t_________________________________________________________________________________";
+	if (option == '1')
+	{
+		data = ReservedBedsRoom_1;
+	}
+	else if (option == '2')
+	{
+		data = ReservedBedsRoom_2;
+	}
+	else if (option == '3')
+	{
+		data = ReservedBedsRoom_3;
+	}
+	while (temp != NULL)
+	{
+		temp->DisplayPatientData(option);
+		temp = temp->next;
+	}
+}
+Patient::~Patient()
+{
+	delete next;
+	delete prev;
+	delete admit_date;
+	delete discharge_date;
+}
+int Patient::ReservedBedsRoom_1 = 0;
+int Patient::ReservedBedsRoom_2 = 0;
+int Patient::ReservedBedsRoom_3 = 0;
+
+
+class Room :public Patient, public Nurse, public Doctor
+{
+protected:
+	int RoomNo = 0;
+	int number_of_Beds = 30;
+	Patient* patientData;
+	Nurse* nurseData;
+	Doctor* doctorData;
+public:
+	Room();
+	void InputPatientData(Room room[], char option);//will take person data and assing bedno
+	void ModifyPatientData(Room room[], char option, char choice);
+	void InputNurseData(Room room[], char option);
+	void ModifyNurseData(Room room[], char option, char choice);
+	void InputDoctorData(Room room[], char option);
+	void ModifyDoctorData(Room room[], char option, char choice);
+	void ImportRoomFiles(Room RoomData[], char option);
+	~Room();
+};
+
+
+
+Room::Room()
+{
+	patientData = NULL;
+	nurseData = NULL;
+	doctorData = NULL;
+}
+
+
+void Room::InputPatientData(Room room[], char option)
+{
+	if (option == '1')
+	{
+		room[0].InputSinglePatient(&room[0].patientData, option);//Room_1
+	}
+	else if (option == '2')
+	{
+		room[0].InputSinglePatient(&room[1].patientData, option);//Room_1
+	}
+	else if (option == '3')
+	{
+		room[0].InputSinglePatient(&room[2].patientData, option);//Room_2
+	}
+}
+
+void Room::ModifyPatientData(Room room[], char option, char choice)
+{
+	if (option == '1')
+	{
+		room[0].SearchPatient(&room[0].patientData, option, choice);//Room_0
+	}
+	else if (option == '2')
+	{
+		room[1].SearchPatient(&room[1].patientData, option, choice);//Room_1
+	}
+	else if (option == '3')
+	{
+		room[2].SearchPatient(&room[2].patientData, option, choice);//Room_2
+	}
+}
+
+
+void Room::InputNurseData(Room room[], char option)
+{
+	if (option == '1')
+	{
+		room[0].InputSingleNurse(&room[0].nurseData, option);//Room_1
+	}
+	else if (option == '2')
+	{
+		room[1].InputSingleNurse(&room[1].nurseData, option);//Room_1
+	}
+	else if (option == '3')
+	{
+		room[2].InputSingleNurse(&room[2].nurseData, option);//Room_2
+	}
+}
+
+void Room::ModifyNurseData(Room room[], char option, char choice)
+{
+	if (option == '1')
+	{
+		room[0].SearchNurse(&room[0].nurseData, option, choice);//Room_0
+	}
+	else if (option == '2')
+	{
+		room[1].SearchNurse(&room[1].nurseData, option, choice);//Room_1
+	}
+	else if (option == '3')
+	{
+		room[2].SearchNurse(&room[2].nurseData, option, choice);//Room_2
+	}
+}
+
+
+void Room::InputDoctorData(Room room[], char option)
+{
+	if (option == '1')
+	{
+		room[0].InputSingleDoctor(&room[0].doctorData, option);//Room_1
+	}
+	else if (option == '2')
+	{
+		room[1].InputSingleDoctor(&room[1].doctorData, option);//Room_1
+	}
+	else if (option == '3')
+	{
+		room[2].InputSingleDoctor(&room[2].doctorData, option);//Room_2
+	}
+}
+
+void Room::ModifyDoctorData(Room room[], char option, char choice)
+{
+	if (option == '1')
+	{
+		room[0].SearchDoctor(&room[0].doctorData, option, choice);//Room_0
+	}
+	else if (option == '2')
+	{
+		room[1].SearchDoctor(&room[1].doctorData, option, choice);//Room_1
+	}
+	else if (option == '3')
+	{
+		room[2].SearchDoctor(&room[2].doctorData, option, choice);//Room_2
+	}
+}
+void Room::ImportRoomFiles(Room RoomData[], char option)
+{
+	doctorData->ImportTotalDoctors(&doctorData);
+	nurseData->ImportTotalNurses(&nurseData);
+	patientData->ImportTotalReservedBeds(&patientData);
+	if (option == '1')
+	{
+		RoomData[0].patientData->ImportPatientsData(&RoomData[0].patientData, option);
+		RoomData[0].nurseData->ImportNursesData(&RoomData[0].nurseData, option);
+		RoomData[0].doctorData->ImportDoctorsData(&RoomData[0].doctorData, option);
+	}
+	else if (option == '2')
+	{
+		RoomData[1].patientData->ImportPatientsData(&RoomData[1].patientData, option);
+		RoomData[1].nurseData->ImportNursesData(&RoomData[1].nurseData, option);
+		RoomData[1].doctorData->ImportDoctorsData(&RoomData[1].doctorData, option);
+	}
+	else if (option == '3')
+	{
+		RoomData[2].patientData->ImportPatientsData(&RoomData[2].patientData, option);
+		RoomData[2].nurseData->ImportNursesData(&RoomData[2].nurseData, option);
+	}
+
+}
+
+
+
+Room::~Room()
+{
+	delete patientData;
+	delete nurseData;
+	delete doctorData;
+}
+
+
+
+class QuarantineCenter :public Room
+{
+protected:
+
+	static string location;
+	static string centerid;
+	static string contactnumber;
+	Room RoomData[3];
+	static string adminpassword;
+	string userpassword;
+public:
+	QuarantineCenter();
+	void CenterData();
+	void inputcenterdata();
+	void exportcenterdata();
+	void importcenterdata();
+	bool checkadminpass(string pass);
+	bool checkuserpass(string pass);
+	void setuserpass();
+	void setadminpass();
+	void displaycenterdata();
+	void InputDoctor(char option);
+	void searchDoctor(char option, char choice);
+	void InputPatient(char option);
+	void searchPatient(char option, char choice);
+	void InputNurse(char option);
+	void searchNurse(char option, char choice);
+	void ImportAllFiles(char option);//Doctor indincates that this file is for doctor record and last integer indicates room number
+};
+
+
+QuarantineCenter::QuarantineCenter()
+{
+	location = "Lahore";
+	centerid = "1111";
+	contactnumber = "04237484883";
+}
+void QuarantineCenter::inputcenterdata()
+{
+	cin.ignore();
+	cout << "\n\n  Enter Location Of Center  :  ";
+	getline(cin, location);
+	cin.ignore();
+	cout << "\n\n  Enter Center ID Number    :  ";
+	getline(cin, centerid);
+	cin.ignore();
+	cout << "\n\n  Enter Help Line  Number   :  ";
+	getline(cin, contactnumber);
+}
+void QuarantineCenter::exportcenterdata()
+{
+	fstream CenterData;
+	CenterData.open("Center Data.txt", ios::trunc | ios::out);
+	CenterData.close();
+	CenterData.open("Center Data.txt", ios::out | ios::app);
+	cin.ignore();
+	CenterData << location << endl << centerid << endl << contactnumber << endl << adminpassword << endl << userpassword << endl;
+	CenterData.close();
+}
+void QuarantineCenter::importcenterdata()
+{
+	fstream CenterData;
+	CenterData.open("Center Data.txt", ios::in);
+	while (!CenterData.eof())
+	{
+		getline(CenterData, location);
+		getline(CenterData, centerid);
+		getline(CenterData, contactnumber);
+		getline(CenterData, adminpassword);
+		getline(CenterData, userpassword);
+	}
+	CenterData.close();
+}
+bool QuarantineCenter::checkadminpass(string pass)
+{
+	if (pass == this->adminpassword)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+bool QuarantineCenter::checkuserpass(string pass)
+{
+	if (pass == this->userpassword)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+void QuarantineCenter::setuserpass()
+{
+	string pass, confirmpass;
+	bool wrong = true;
+	do
+	{
+		cin.ignore();
+		cout << "\n\n  Enter Your New User Password   :  ";
+		getline(cin, pass);
+		cin.ignore();
+		cout << "\n\n  Please Confirm Your Password   :  ";
+		getline(cin, confirmpass);
+		if (pass == confirmpass)
+		{
+			userpassword = pass;
+			wrong = false;
+		}
+		else
+		{
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n               Password Didn't Matched ";
+			cout << "\n\n_______________________________________________\n\n";
+		}
+	} while (wrong);
+}
+void QuarantineCenter::setadminpass()
+{
+	string pass, confirmpass;
+	bool wrong = true;
+	do
+	{
+		cin.ignore();
+		cout << "\n\n  Enter Your New Admin Password   :  ";
+		getline(cin, pass);
+		cin.ignore();
+		cout << "\n\n  Please  Confirm Your Password   :  ";
+		getline(cin, confirmpass);
+		if (pass == confirmpass)
+		{
+			adminpassword = pass;
+			wrong = false;
+		}
+		else
+		{
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n               Password Didn't Matched ";
+			cout << "\n\n_______________________________________________\n\n";
+		}
+	} while (wrong);
+}
+void QuarantineCenter::CenterData()
+{
+	fstream CenterData;
+	system("cls");
+	CenterData.open("Center Data.txt", ios::in);
+	if (!CenterData.is_open())
+	{
+		cout << "\n\n_______________________________________________";
+		cout << "\n\n             Entering Center Data ";
+		cout << "\n\n_______________________________________________\n\n";
+		this->setadminpass();
+		this->setuserpass();
+		this->inputcenterdata();
+		this->exportcenterdata();
+	}
+	else
+	{
+		this->importcenterdata();
+	}
+}
+void QuarantineCenter::ImportAllFiles(char option)//Doctor indincates that this file is for doctor record and last integer indicates room number
+{
+	if (option == '1')
+	{
+		RoomData[0].ImportRoomFiles(RoomData, option);
+	}
+	else if (option == '2')
+	{
+		RoomData[1].ImportRoomFiles(RoomData, option);
+	}
+	else if (option == '3')
+	{
+		RoomData[2].ImportRoomFiles(RoomData, option);
+	}
+}
+void QuarantineCenter::InputPatient(char option)
+{
+	if (option == '1')
+	{
+		RoomData[0].InputPatientData(RoomData, option);
+	}
+	else if (option == '2')
+	{
+		RoomData[1].InputPatientData(RoomData, option);
+	}
+	else if (option == '3')
+	{
+		RoomData[2].InputPatientData(RoomData, option);
+	}
+}
+
+
+void QuarantineCenter::searchPatient(char option, char choice)
+{
+	if (option == '1')
+	{
+		RoomData[0].ModifyPatientData(RoomData, option, choice);
+	}
+	else if (option == '2')
+	{
+		RoomData[1].ModifyPatientData(RoomData, option, choice);
+	}
+	else if (option == '3')
+	{
+		RoomData[2].ModifyPatientData(RoomData, option, choice);
+	}
+}
+void QuarantineCenter::InputDoctor(char option)
+{
+	if (option == '1')
+	{
+		RoomData[0].InputDoctorData(RoomData, option);
+	}
+	else if (option == '2')
+	{
+		RoomData[1].InputDoctorData(RoomData, option);
+	}
+	else if (option == '3')
+	{
+		RoomData[2].InputDoctorData(RoomData, option);
+	}
+}
+
+
+void QuarantineCenter::searchDoctor(char option, char choice)
+{
+	if (option == '1')
+	{
+		RoomData[0].ModifyDoctorData(RoomData, option, choice);
+	}
+	else if (option == '2')
+	{
+		RoomData[1].ModifyDoctorData(RoomData, option, choice);
+	}
+	else if (option == '3')
+	{
+		RoomData[2].ModifyDoctorData(RoomData, option, choice);
+	}
+}
+
+void QuarantineCenter::InputNurse(char option)
+{
+	if (option == '1')
+	{
+		RoomData[0].InputNurseData(RoomData, option);
+	}
+	else if (option == '2')
+	{
+		RoomData[1].InputNurseData(RoomData, option);
+	}
+	else if (option == '3')
+	{
+		RoomData[2].InputNurseData(RoomData, option);
+	}
+}
+
+
+void QuarantineCenter::searchNurse(char option, char choice)
+{
+	if (option == '1')
+	{
+		RoomData[0].ModifyNurseData(RoomData, option, choice);
+	}
+	else if (option == '2')
+	{
+		RoomData[1].ModifyNurseData(RoomData, option, choice);
+	}
+	else if (option == '3')
+	{
+		RoomData[2].ModifyNurseData(RoomData, option, choice);
+	}
+}
+
+
+
+void QuarantineCenter::displaycenterdata()
+{
+	cout << "\n\n  Location Of Center  :  " << location;
+	cout << "\n\n  Center ID Number    :  " << centerid;
+	cout << "\n\n  Help Line  Number   :  " << contactnumber;
+	cout << "\n\n  Admin Pass  :  " << adminpassword;
+	cout << "\n\n  User pass   :  " << userpassword;
+}
+string QuarantineCenter::adminpassword = "NULL";
+string QuarantineCenter::location = "NULL";
+string QuarantineCenter::centerid = "NULL";
+string QuarantineCenter::contactnumber = "NULL";
+
+
+void main()
+{
+	QuarantineCenter* Object = new QuarantineCenter;
+	char option, select, choice;
+	string pass;
+	bool wrong = true, adminverfy = false, userverify = false;
+	Object->CenterData();
+	Object->ImportAllFiles('1');
+	Object->ImportAllFiles('2');
+	Object->ImportAllFiles('3');
+	do
+	{
+		system("cls");
+		cout << "\n\n\n\t\t  Welcome To Quarantine Center Main Menu ";
+		cout << "\n\n_________________________________________________________________________";
+		cout << "\n\n\t\t1.  To Login as Admin";
+		cout << "\n\n\t\t2.  To Login as  User ";
+		cout << "\n\n__________________________________________________________________________\n\n\t\t";
+		cin >> select;
+		if (select == '1')
+		{
+			system("cls");
+			do
+			{
+				wrong = false;
+				cin.ignore();
+				cout << "\n\n________________________________________________________________________________________";
+				cout << "\n\n  Enter Your Password To Contiue As Administrator Or 'E' To Exit :  ";
+				getline(cin, pass);
+				if (pass == "E" || pass == "e")
+				{
+					wrong = false;
+					break;
+				}
+				else if (Object->checkadminpass(pass))
+				{
+					wrong = false;
+				}
+				else
+				{
+					cout << "\n\n_______________________________________________";
+					cout << "\n\n  Password Doesn't Matched Try Again..! ";
+					cout << "\n\n_______________________________________________\n\n";
+					wrong = true;
+				}
+			} while (wrong);
+			if (Object->checkadminpass(pass))
+			{
+				do
+				{
+					wrong = false;
+					system("cls");
+					cout << "\n\n_________________________________________________________________________";
+					cout << "\n\n\t\t1.  To  Access  Nurse's Database";
+					cout << "\n\n\t\t2.  To  Access Docotr's Database";
+					cout << "\n\n\t\t3.  To Edit Center General Info";
+					cout << "\n\n\t\t4.  To  Change  Admin  Password";
+					cout << "\n\n\t\t5.  To   Change  User  Password";
+					cout << "\n\n\t\t6.  To   Exit To The Main  Menu";
+					cout << "\n\n__________________________________________________________________________\n\n\t\t";
+					cin >> choice;
+					if (choice == '6')
+					{
+						pass = "Null";
+						wrong = false;
+						break;
+					}
+					else if (choice == '1')
+					{
+						do
+						{
+							system("CLS");
+							cout << "\n\n_________________________________________________________________________";
+							cout << "\n\n\t\t1.  For  Adding  A  Nurse Record";
+							cout << "\n\n\t\t2.  For Searching A Nurse Record";
+							cout << "\n\n\t\t3.  For Modifying A Nurse Record";
+							cout << "\n\n\t\t4.  For Deleting  A Nurse Record";
+							cout << "\n\n\t\t5.  To   Exit To The Main  Menu\n\n";
+							cout << "\n\n__________________________________________________________________________\n\n\t\t";
+							cin >> choice;
+							if (choice == '5')
+							{
+								pass = "Null";
+								wrong = false;
+								break;
+							}
+							if (choice == '1')
+							{
+								system("CLS");
+								cout << "\n\n_________________________________________________________________________";
+								cout << "\n\n\t\t1.  For Corona Ward";
+								cout << "\n\n\t\t2.  For Critical Corona";
+								cout << "\n\n\t\t3.  For Generic Ward\n\n\t\t";
+								cout << "\n\n__________________________________________________________________________\n\n\t\t";
+								cin >> option;
+								Object->InputNurse(option);
+							}
+							else if (choice == '2' || choice == '3' || choice == '4')
+							{
+								system("CLS");
+								cout << "\n\n__________________________________________________________________________";
+								cout << "\n\n\t\t1.  For Corona Ward";
+								cout << "\n\n\t\t2.  For Critical Corona";
+								cout << "\n\n\t\t3.  For Generic Ward\n\n\t\t";
+								cout << "\n\n__________________________________________________________________________\n\n\t\t";
+								cin >> option;
+								Object->searchNurse(option, choice);
+							}
+							cout << "\n\n_________________________________________________________________________";
+							cout << "\n\n\t\t1.  Press Y To Remain In Admin Data Base";
+							cout << "\n\n\t\t2.  Press  E  To Return  To  Main  Menu ";
+							cout << "\n\n__________________________________________________________________________\n\n\t\t";
+							cin >> choice;
+							if (choice == 'E' || choice == 'e')
+							{
+								break;
+							}
+						} while (choice == 'y' || choice == 'Y');
+					}
+					else if (choice == '2')
+					{
+						do
+						{
+							system("CLS");
+							cout << "\n\n_________________________________________________________________________";
+							cout << "\n\n\t\t1.  For  Adding  A  Doctor Record";
+							cout << "\n\n\t\t2.  For Searching A Doctor Record";
+							cout << "\n\n\t\t3.  For Modifying A Doctor Record";
+							cout << "\n\n\t\t4.  For Deleting  A Doctor Record";
+							cout << "\n\n\t\t5.  To   Exit To The Main  Menu\n\n";
+							cout << "\n\n__________________________________________________________________________\n\n\t\t";
+							cin >> choice;
+							if (choice == '5')
+							{
+								pass = "Null";
+								wrong = false;
+								break;
+							}
+							if (choice == '1')
+							{
+								system("CLS");
+								cout << "\n\n_________________________________________________________________________";
+								cout << "\n\n\t\t1.  For Corona Ward";
+								cout << "\n\n\t\t2.  For Critical Corona";
+								cout << "\n\n\t\t3.  For Generic Ward\n\n\t\t";
+								cout << "\n\n__________________________________________________________________________\n\n\t\t";
+								cin >> option;
+								Object->InputDoctor(option);
+							}
+							else if (choice == '2' || choice == '3' || choice == '4')
+							{
+								system("CLS");
+								cout << "\n\n__________________________________________________________________________";
+								cout << "\n\n\t\t1.  For Corona Ward";
+								cout << "\n\n\t\t2.  For Critical Corona";
+								cout << "\n\n\t\t3.  For Generic Ward\n\n\t\t";
+								cout << "\n\n__________________________________________________________________________\n\n\t\t";
+								cin >> option;
+								Object->searchDoctor(option, choice);
+							}
+							cout << "\n\n_________________________________________________________________________";
+							cout << "\n\n\t\t1.  Press Y To Remain In Admin Data Base";
+							cout << "\n\n\t\t2.  Press  E  To Return  To  Main  Menu ";
+							cout << "\n\n__________________________________________________________________________\n\n\t\t";
+							cin >> choice;
+							if (choice == 'E' || choice == 'e')
+							{
+								break;
+							}
+						} while (choice == 'y' || choice == 'Y');
+					}
+					else if (choice == '3')
+					{
+						system("cls");
+						cout << "\n\n_________________________________________________________________________";
+						Object->inputcenterdata();
+						Object->exportcenterdata();
+					}
+					else if (choice == '4')
+					{
+						system("cls");
+						cout << "\n\n_________________________________________________________________________";
+						Object->setadminpass();
+						Object->exportcenterdata();
+					}
+					else if (choice == '5')
+					{
+						system("cls");
+						cout << "\n\n_________________________________________________________________________";
+						Object->setuserpass();
+						Object->exportcenterdata();
+					}
+					cin.ignore();
+					cout << "\n\n_________________________________________________________________________";
+					cout << "\n\n\n  Press Y To Return To Admin Menu 'E' to Exit :  ";
+					cin >> choice;
+					if (choice == 'E' || choice == 'e')
+					{
+						wrong = false;
+						break;
+					}
+				} while (choice == 'y' || choice == 'Y' || wrong == true);
+			}
+
+		}
+		if (select == '2')
+		{
+			system("cls");
+			do
+			{
+				wrong = false;
+				cin.ignore();
+				cout << "\n\n________________________________________________________________________________________";
+				cout << "\n\n  Enter Your Password To Contiue As User Or 'E' To Exit :  ";
+				getline(cin, pass);
+				if (pass == "E" || pass == "e")
+				{
+					pass = "Null";
+					wrong = false;
+					break;
+				}
+				else if (Object->checkuserpass(pass))
+				{
+					wrong = false;
+				}
+				else
+				{
+					cout << "\n\n_______________________________________________";
+					cout << "\n\n  Password Doesn't Matched Try Again..! ";
+					cout << "\n\n_______________________________________________\n\n";
+					wrong = true;
+				}
+			} while (wrong);
+			if (Object->checkuserpass(pass))
+			{
+				do
+				{
+					system("CLS");
+					cout << "\n\n_________________________________________________________________________";
+					cout << "\n\n\t\t1.  For Admitting A Patient Record";
+					cout << "\n\n\t\t2.  For Searching A Patient Record";
+					cout << "\n\n\t\t3.  For Modifying A Patient Record";
+					cout << "\n\n\t\t4.  For Deleting  A Patient Record";
+					cout << "\n\n\t\t5.  To   Exit To The Main  Menu\n\n";
+					cout << "\n\n__________________________________________________________________________\n\n\t\t";
+					cin >> choice;
+					if (choice == '5')
+					{
+						pass = "Null";
+						wrong = false;
+						break;
+					}
+					if (choice == '1')
+					{
+						system("CLS");
+						cout << "\n\n_________________________________________________________________________";
+						cout << "\n\n\t\t1.  For Corona Patient";
+						cout << "\n\n\t\t2.  For Critical Corona";
+						cout << "\n\n\t\t3.  For Generic Patient\n\n\t\t";
+						cout << "\n\n__________________________________________________________________________\n\n\t\t";
+						cin >> option;
+						Object->InputPatient(option);
+					}
+					else if (choice == '2' || choice == '3' || choice == '4')
+					{
+						system("CLS");
+						cout << "\n\n__________________________________________________________________________";
+						cout << "\n\n\t\t1.  For Corona Patient";
+						cout << "\n\n\t\t2.  For Critical Corona";
+						cout << "\n\n\t\t3.  For Generic Patient\n\n\t\t";
+						cout << "\n\n__________________________________________________________________________\n\n\t\t";
+						cin >> option;
+						Object->searchPatient(option, choice);
+					}
+					cout << "\n\n_________________________________________________________________________";
+					cout << "\n\n\t\t1.  Press Y To Remain In User Data Base";
+					cout << "\n\n\t\t2.  Press  E  To Return  To  Main  Menu ";
+					cout << "\n\n__________________________________________________________________________\n\n\t\t";
+					cin >> choice;
+					if (choice == 'E' || choice == 'e')
+					{
+						break;
+					}
+				} while (choice == 'y' || choice == 'Y');
+			}
+		}
+		else
+		{
+			cout << "\n\n_______________________________________________";
+			cout << "\n\n               Invalid Selection ";
+			cout << "\n\n_______________________________________________\n\n";
+		}
+		cout << "\n\n  Press Y To Return To Main Login Menu 'E' to Exit :  ";
+		cin >> select;
+		if (select == 'E' || select == 'e')
+		{
+			break;
+		}
+	} while (select == 'y' || select == 'Y');
+	delete Object;
+}
